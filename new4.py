@@ -18,10 +18,16 @@ if uploaded_file is not None:
         try:
             pdf_bytes = uploaded_file.read()
             doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+            images = []
+
+            zoom = 3.0  # 3.0 = ~216 DPI, increase for higher quality
+            matrix = fitz.Matrix(zoom, zoom)
+
             for page in doc:
-                pix = page.get_pixmap()
+                pix = page.get_pixmap(matrix=matrix)
                 img_pil = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                 images.append(img_pil)
+
         except Exception as e:
             st.error(f"Failed to process PDF. Error: {e}")
     else:
@@ -73,7 +79,6 @@ if uploaded_file is not None:
         )
 
 
-# To run: streamlit run new4.py
 
 
 
