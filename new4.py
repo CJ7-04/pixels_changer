@@ -16,7 +16,8 @@ if uploaded_file is not None:
     # Handle PDF
     if uploaded_file.type == "application/pdf":
         try:
-            pdf_pages = convert_from_bytes(uploaded_file.read())
+            # Preserve original size by setting dpi (default 200)
+            pdf_pages = convert_from_bytes(uploaded_file.read(), dpi=200)
             images = pdf_pages
         except Exception as e:
             st.error(f"Failed to process PDF. Make sure poppler is installed. Error: {e}")
@@ -33,14 +34,12 @@ if uploaded_file is not None:
     processed_pages = []
 
     for i, img in enumerate(images):
-        # Convert PIL to OpenCV
         img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
-        # --- Your Black Pixel Conversion Logic ---
+        # Black pixel conversion logic
         black_mask = cv2.inRange(img_cv, np.array([0, 0, 0]), np.array([black_thresh, black_thresh, black_thresh]))
         output = np.zeros_like(img_cv)              # start all black
-        output[black_mask > 0] = [255, 255, 255]   # keep only black parts as white
-        # -----------------------------------------
+        output[black_mask > 0] = [255, 255, 255]   # convert black pixels to white
 
         # Convert to PIL for display and PDF
         output_pil = Image.fromarray(cv2.cvtColor(output, cv2.COLOR_BGR2RGB))
@@ -69,5 +68,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
+
 
 # To run: streamlit run new4.py
