@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 import streamlit as st
 from PIL import Image
-from pdf2image import convert_from_bytes
 import io
+import fitz  # PyMuPDF
 
 st.title("PDF/Image Black Pixels Extractor")
 
@@ -16,11 +16,14 @@ if uploaded_file is not None:
     # Handle PDF
     if uploaded_file.type == "application/pdf":
         try:
-            # Preserve original size by setting dpi (default 200)
-            pdf_pages = convert_from_bytes(uploaded_file.read(), dpi=200, poppler_path="/usr/bin")
-            images = pdf_pages
+            pdf_bytes = uploaded_file.read()
+            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+            for page in doc:
+                pix = page.get_pixmap()
+                img_pil = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                images.append(img_pil)
         except Exception as e:
-            st.error(f"Failed to process PDF. Make sure poppler is installed. Error: {e}")
+            st.error(f"Failed to process PDF. Error: {e}")
     else:
         # Handle single image
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
@@ -69,6 +72,8 @@ if uploaded_file is not None:
             mime="application/pdf"
         )
 
+
 # To run: streamlit run new4.py
+
 
 
