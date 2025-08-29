@@ -108,9 +108,10 @@ if uploaded_file is not None:
         st.download_button(
             "Download All Pages as PDF",
             data=pdf_buf.getvalue(),
-            file_name="processed_black_pages.pdf"+uploaded_file,
+            file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
