@@ -5,7 +5,7 @@ from PIL import Image
 import io
 import fitz  # PyMuPDF
 
-st.title("PDF/Image Black Pixels Extractor with Crop & Rectangle Inversion")
+st.title("PDF/Image--Black Pixels Extractor")
 
 # File uploader: images + PDFs
 uploaded_file = st.file_uploader("Upload an image or PDF", type=["jpg", "jpeg", "png", "pdf"])
@@ -70,7 +70,7 @@ if uploaded_file is not None:
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < 5000:  # skip small noise
+            if area < 500:  # skip small noise
                 continue
 
             # Approximate contour to polygon
@@ -111,6 +111,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
