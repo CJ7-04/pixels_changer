@@ -30,22 +30,16 @@ if uploaded_file is not None:
                 # Convert to OpenCV
                 img_cv = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
-                # Convert to grayscale
+                # Auto-crop white/margin areas
                 gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-
-                # Threshold to get mask of content (non-white)
                 _, thresh = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
-
-                # Find contours and bounding box
                 contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 if contours:
                     x, y, w, h = cv2.boundingRect(np.vstack(contours))
-                    img_cv_cropped = img_cv[y:y+h, x:x+w]
-                else:
-                    img_cv_cropped = img_cv  # fallback if nothing detected
+                    img_cv = img_cv[y:y+h, x:x+w]
 
                 # Convert back to PIL
-                img_pil_cropped = Image.fromarray(cv2.cvtColor(img_cv_cropped, cv2.COLOR_BGR2RGB))
+                img_pil_cropped = Image.fromarray(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))
                 images.append(img_pil_cropped)
 
         except Exception as e:
@@ -69,20 +63,25 @@ if uploaded_file is not None:
         output = np.zeros_like(img_cv)              # start all black
         output[black_mask > 0] = [255, 255, 255]   # convert black pixels to white
 
-        # --- Invert large rectangles ---
+        # --- Invert only large true rectangles ---
         gray_output = cv2.cvtColor(output, cv2.COLOR_BGR2GRAY)
-        # Threshold to detect shapes
         _, thresh_rect = cv2.threshold(gray_output, 127, 255, cv2.THRESH_BINARY_INV)
         contours, _ = cv2.findContours(thresh_rect, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            # Consider only large rectangles (adjust min_area as needed)
-            if area > 5000:
-                x, y, w, h = cv2.boundingRect(cnt)
+            if area < 5000:  # skip small noise
+                continue
+
+            # Approximate contour to polygon
+            epsilon = 0.02 * cv2.arcLength(cnt, True)
+            approx = cv2.approxPolyDP(cnt, epsilon, True)
+
+            # Check if polygon has 4 vertices → likely rectangle
+            if len(approx) == 4:
+                x, y, w, h = cv2.boundingRect(approx)
                 roi = output[y:y+h, x:x+w]
-                # Invert colors inside rectangle
-                roi = 255 - roi
+                roi = 255 - roi  # invert colors inside rectangle
                 output[y:y+h, x:x+w] = roi
 
         # Convert to PIL for display and PDF
@@ -112,6 +111,8 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
+
 
 
 
