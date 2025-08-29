@@ -5,7 +5,7 @@ from PIL import Image
 import io
 import fitz  # PyMuPDF
 
-st.title("PDF/Image Black Pixels Extractor with Auto-Crop")
+st.title("PDF/Image Black Pixels Extractor with Crop & Rectangle Inversion")
 
 # File uploader: images + PDFs
 uploaded_file = st.file_uploader("Upload an image or PDF", type=["jpg", "jpeg", "png", "pdf"])
@@ -69,6 +69,22 @@ if uploaded_file is not None:
         output = np.zeros_like(img_cv)              # start all black
         output[black_mask > 0] = [255, 255, 255]   # convert black pixels to white
 
+        # --- Invert large rectangles ---
+        gray_output = cv2.cvtColor(output, cv2.COLOR_BGR2GRAY)
+        # Threshold to detect shapes
+        _, thresh_rect = cv2.threshold(gray_output, 127, 255, cv2.THRESH_BINARY_INV)
+        contours, _ = cv2.findContours(thresh_rect, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            # Consider only large rectangles (adjust min_area as needed)
+            if area > 5000:
+                x, y, w, h = cv2.boundingRect(cnt)
+                roi = output[y:y+h, x:x+w]
+                # Invert colors inside rectangle
+                roi = 255 - roi
+                output[y:y+h, x:x+w] = roi
+
         # Convert to PIL for display and PDF
         output_pil = Image.fromarray(cv2.cvtColor(output, cv2.COLOR_BGR2RGB))
         processed_pages.append(output_pil)
@@ -96,6 +112,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
