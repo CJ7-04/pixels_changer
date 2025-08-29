@@ -69,6 +69,5 @@ if uploaded_file is not None:
             mime="application/pdf"
         )
 
-
-
 # To run: streamlit run new4.py
+
