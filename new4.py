@@ -20,7 +20,7 @@ if uploaded_file is not None:
             doc = fitz.open(stream=pdf_bytes, filetype="pdf")
             images = []
 
-            zoom = 3.0  # ~216 DPI for higher quality
+            zoom = 4.0  # ~216 DPI for higher quality
             matrix = fitz.Matrix(zoom, zoom)
 
             for page in doc:
@@ -51,7 +51,7 @@ if uploaded_file is not None:
         images = [Image.fromarray(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))]
 
     # Black threshold slider
-    black_thresh = st.slider("Black Threshold", 0, 255, 70)
+    black_thresh = st.slider("Black Threshold", 0, 255, 107)
 
     processed_pages = []
 
@@ -70,7 +70,7 @@ if uploaded_file is not None:
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < 9000:  # skip small noise
+            if area < 5000:  # skip small noise
                 continue
 
             # Approximate contour to polygon
@@ -111,6 +111,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
