@@ -70,7 +70,7 @@ if uploaded_file is not None:
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < 500:  # skip small noise
+            if area < 6000:  # skip small noise
                 continue
 
             # Approximate contour to polygon
@@ -111,6 +111,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
