@@ -5,7 +5,7 @@ from PIL import Image
 import io
 import fitz  # PyMuPDF
 
-st.title("PDF/Image Black Pixels Extractor")
+st.title("PDF/Image Black Pixels Extractor with Auto-Crop")
 
 # File uploader: images + PDFs
 uploaded_file = st.file_uploader("Upload an image or PDF", type=["jpg", "jpeg", "png", "pdf"])
@@ -20,13 +20,33 @@ if uploaded_file is not None:
             doc = fitz.open(stream=pdf_bytes, filetype="pdf")
             images = []
 
-            zoom = 3.0  # 3.0 = ~216 DPI, increase for higher quality
+            zoom = 3.0  # ~216 DPI for higher quality
             matrix = fitz.Matrix(zoom, zoom)
 
             for page in doc:
                 pix = page.get_pixmap(matrix=matrix)
                 img_pil = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-                images.append(img_pil)
+
+                # Convert to OpenCV
+                img_cv = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+
+                # Convert to grayscale
+                gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+
+                # Threshold to get mask of content (non-white)
+                _, thresh = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
+
+                # Find contours and bounding box
+                contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    x, y, w, h = cv2.boundingRect(np.vstack(contours))
+                    img_cv_cropped = img_cv[y:y+h, x:x+w]
+                else:
+                    img_cv_cropped = img_cv  # fallback if nothing detected
+
+                # Convert back to PIL
+                img_pil_cropped = Image.fromarray(cv2.cvtColor(img_cv_cropped, cv2.COLOR_BGR2RGB))
+                images.append(img_pil_cropped)
 
         except Exception as e:
             st.error(f"Failed to process PDF. Error: {e}")
@@ -34,8 +54,7 @@ if uploaded_file is not None:
         # Handle single image
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         img_cv = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-        img_pil = Image.fromarray(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))
-        images = [img_pil]
+        images = [Image.fromarray(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))]
 
     # Black threshold slider
     black_thresh = st.slider("Black Threshold", 0, 255, 70)
@@ -77,6 +96,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
