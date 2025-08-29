@@ -17,7 +17,7 @@ if uploaded_file is not None:
     if uploaded_file.type == "application/pdf":
         try:
             # Preserve original size by setting dpi (default 200)
-            pdf_pages = convert_from_bytes(uploaded_file.read(), dpi=200)
+            pdf_pages = convert_from_bytes(uploaded_file.read(), dpi=200, poppler_path="/usr/bin")
             images = pdf_pages
         except Exception as e:
             st.error(f"Failed to process PDF. Make sure poppler is installed. Error: {e}")
@@ -70,4 +70,5 @@ if uploaded_file is not None:
         )
 
 # To run: streamlit run new4.py
+
 
