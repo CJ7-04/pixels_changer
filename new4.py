@@ -1,7 +1,7 @@
 import cv2
 import numpy as np 
-import streamlit as st from PIL
-import Image
+import streamlit as st 
+from PIL import Image
 import io 
 import fitz  # PyMuPDF
 
@@ -132,6 +132,7 @@ if processed_pages:
         file_name="processed_black_pages.pdf",
         mime="application/pdf"
     )
+
 
 
 
