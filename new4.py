@@ -20,7 +20,7 @@ if uploaded_file is not None:
             doc = fitz.open(stream=pdf_bytes, filetype="pdf")
             images = []
 
-            zoom = 4.0  # ~216 DPI for higher quality
+            zoom = 3.0  # ~216 DPI for higher quality
             matrix = fitz.Matrix(zoom, zoom)
 
             for page in doc:
@@ -111,6 +111,7 @@ if uploaded_file is not None:
             file_name="processed_black_pages.pdf",
             mime="application/pdf"
         )
+
 
 
 
