@@ -82,7 +82,7 @@ Pillow (PIL) – image handling & PDF creation
 
 pdf2image – PDF to image conversion
 
-📦 Installation
+📦 Installation:-
 pip install streamlit opencv-python numpy pillow pdf2image
 
 Poppler Requirement (for PDF support)
@@ -126,6 +126,6 @@ White background → Dark gray / black
 Image size preserved in PDF output
 
 
-#THANK YOU
+# THANK YOU
 
 
